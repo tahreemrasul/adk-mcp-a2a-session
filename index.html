@@ -371,10 +371,10 @@ tools: [get_exchange_rate]</pre>
       <ol>
         <li><span class="who">User</span><span>"Convert 200 USD to GBP and to JPY"</span></li>
         <li class="m"><span class="who">Model</span><span>calls <code>get_exchange_rate("USD", "GBP")</code></span></li>
-        <li class="t"><span class="who">Tool</span><span>returns <code>0.787</code></span></li>
+        <li class="t"><span class="who">Tool</span><span>returns <code>0.787037</code></span></li>
         <li class="m"><span class="who">Model</span><span>calls <code>get_exchange_rate("USD", "JPY")</code></span></li>
         <li class="t"><span class="who">Tool</span><span>returns <code>150.0</code></span></li>
-        <li class="done"><span class="who">Model</span><span>"200 USD is 157.40 GBP and 30,000 JPY." <em>No further calls, so the loop ends.</em></span></li>
+        <li class="done"><span class="who">Model</span><span>"200 USD is 157.41 GBP and 30,000 JPY." <em>No further calls, so the loop ends.</em></span></li>
       </ol>
       <div class="loop" aria-hidden="true"><span>loop</span></div>
     </div>
