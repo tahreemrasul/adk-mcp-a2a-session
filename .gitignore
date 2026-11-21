@@ -1,0 +1,6 @@
+MISSION.md
+NOTES.md
+.ipynb_checkpoints/
+currency_server.py
+__pycache__/
+.env

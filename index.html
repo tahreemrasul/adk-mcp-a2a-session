@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADK, MCP and A2A</title>
+<meta name="description" content="Building tool-using AI agents with Google's Agent Development Kit, connecting them to tools through the Model Context Protocol, and to other agents through the Agent2Agent protocol.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fbfaf7;
+  --surface: #f2efe8;
+  --ink: #1d1c1a;
+  --muted: #6a665e;
+  --rule: #dcd7cc;
+  --accent: #b4452c;
+  --accent-soft: #f6e4dc;
+  --adk: #2f6db5;
+  --mcp: #2c8a5f;
+  --a2a: #8a4fb5;
+  --code-bg: #f2efe8;
+  --ok: #2c8a5f;
+  --bad: #b4452c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161514; --surface: #211f1d; --ink: #ebe7df; --muted: #a39e94; --rule: #38352f;
+    --accent: #e8805f; --accent-soft: #3a2620; --adk: #7aaef0; --mcp: #6cc99b; --a2a: #c29ae6;
+    --code-bg: #211f1d; --ok: #6cc99b; --bad: #e8805f;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161514; --surface: #211f1d; --ink: #ebe7df; --muted: #a39e94; --rule: #38352f;
+  --accent: #e8805f; --accent-soft: #3a2620; --adk: #7aaef0; --mcp: #6cc99b; --a2a: #c29ae6;
+  --code-bg: #211f1d; --ok: #6cc99b; --bad: #e8805f;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 19px/1.6 "Source Serif 4", Georgia, serif;
+  font-optical-sizing: auto;
+}
+main { max-width: 44rem; margin: 0 auto; padding: 3.5rem 16px 5rem; }
+
+h1, h2, h3, .label, nav, .btn, .quiz button, figcaption, th, .byline, .pill, .step-head, .trace {
+  font-family: Inter, system-ui, sans-serif;
+}
+h1 { font-size: 2.3rem; line-height: 1.15; margin: 0 0 .7rem; letter-spacing: -.01em; }
+h2 { font-size: 1.35rem; margin: 3.2rem 0 .8rem; display: flex; align-items: baseline; gap: .6rem; }
+h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; }
+h3 { font-size: 1rem; margin: 1.8rem 0 .4rem; }
+p { margin: 0 0 1rem; }
+a { color: var(--accent); text-underline-offset: 2px; }
+.lede { font-size: 1.1rem; color: var(--muted); margin-bottom: 1rem; }
+.byline { font-size: .9rem; color: var(--muted); margin-bottom: 1.4rem; }
+.byline strong { color: var(--ink); font-weight: 600; }
+.adk { color: var(--adk); } .mcp { color: var(--mcp); } .a2a { color: var(--a2a); }
+
+.contents { margin: 2rem 0 0; }
+.contents h2 { margin-top: 0; }
+.contents table td:first-child { color: var(--muted); font-family: Inter, sans-serif; font-variant-numeric: tabular-nums; width: 2rem; }
+.contents table a { color: var(--ink); text-decoration: none; font-family: Inter, sans-serif; font-weight: 500; font-size: .9rem; }
+.contents table a:hover { color: var(--accent); }
+.contents td.nb { font-family: Inter, sans-serif; font-size: .8rem; color: var(--muted); white-space: nowrap; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: .45rem; font-size: .85rem; font-weight: 600;
+  background: var(--ink); color: var(--bg); text-decoration: none; border-radius: 6px; padding: .5rem .9rem;
+}
+.btn:hover { opacity: .88; }
+
+code, pre { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .8em; }
+:not(pre) > code { background: var(--code-bg); padding: .08em .3em; border-radius: 3px; }
+pre {
+  background: var(--code-bg); border-radius: 6px; padding: .9rem 1rem; overflow-x: auto;
+  line-height: 1.5; margin: 0 0 1.2rem; font-size: .76rem;
+}
+pre .c { color: var(--muted); }
+pre .k { color: var(--accent); }
+
+blockquote {
+  margin: 0 0 1.2rem; padding: .1rem 0 .1rem 1rem; border-left: 3px solid var(--rule); color: var(--muted); font-style: italic;
+}
+blockquote cite { display: block; font-style: normal; font-size: .85rem; margin-top: .2rem; }
+
+.run {
+  display: flex; gap: .9rem; align-items: center; background: var(--accent-soft); border-radius: 8px;
+  padding: .8rem 1rem; margin: 1.4rem 0; font-size: .95rem;
+}
+.run .label { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); white-space: nowrap; }
+.run .label a { color: inherit; }
+.run p { margin: 0; }
+@media (max-width: 520px) { .run { flex-direction: column; align-items: flex-start; gap: .3rem; } }
+
+.callout { border: 1px dashed var(--rule); border-radius: 8px; padding: .7rem 1rem; margin: 1.2rem 0; font-size: .95rem; }
+.callout .label { display: block; font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: .2rem; }
+
+figure { margin: 1.6rem 0 1.8rem; }
+figure svg { width: 100%; height: auto; display: block; }
+@media (max-width: 600px) { .scroll { overflow-x: auto; } .scroll svg { min-width: 560px; } }
+figcaption { font-size: .78rem; color: var(--muted); margin-top: .6rem; line-height: 1.45; }
+svg text { font-family: Inter, system-ui, sans-serif; fill: var(--ink); }
+svg .muted { fill: var(--muted); }
+svg .box { fill: var(--surface); stroke: var(--rule); stroke-width: 1.2; }
+svg .line { stroke: var(--muted); stroke-width: 1.4; fill: none; }
+svg .x { stroke: var(--bad); stroke-width: 2; }
+
+table { width: 100%; border-collapse: collapse; margin: 0 0 1.4rem; font-size: .92rem; }
+th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+th, td { padding: .5rem .6rem .5rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+
+ul.tight { padding-left: 1.2rem; margin: 0 0 1rem; }
+ul.tight li { margin-bottom: .35rem; }
+
+/* Function-calling steps */
+.steps { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+@media (max-width: 600px) { .steps { grid-template-columns: 1fr; } }
+.step { background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; padding: .8rem .9rem; }
+.step-head { display: flex; align-items: center; gap: .4rem; font-size: .78rem; font-weight: 600; margin-bottom: .45rem; flex-wrap: wrap; }
+.step-head .n { width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--accent); color: var(--bg); display: inline-flex; align-items: center; justify-content: center; font-size: .75rem; }
+.pill { font-size: .7rem; font-weight: 600; padding: .1rem .5rem; border-radius: 99px; border: 1px solid var(--rule); background: var(--bg); }
+.pill.model { color: var(--adk); border-color: var(--adk); }
+.pill.app { color: var(--ink); }
+.pill.fn { color: var(--mcp); border-color: var(--mcp); }
+.step p { font-size: .88rem; margin: 0 0 .45rem; }
+.step pre { margin: 0; font-size: .7rem; padding: .55rem .7rem; background: var(--bg); }
+
+/* Agent loop trace */
+.trace { display: grid; grid-template-columns: 1fr 1.6rem; gap: 0 .6rem; font-size: .82rem; }
+.trace ol { list-style: none; margin: 0; padding: 0; }
+.trace li { display: grid; grid-template-columns: 5.2rem 1fr; gap: .6rem; align-items: baseline; padding: .55rem .7rem; border: 1px solid var(--rule); border-radius: 6px; margin-bottom: .4rem; background: var(--surface); }
+.trace li .who { font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.trace li.m .who { color: var(--adk); }
+.trace li.t .who { color: var(--mcp); }
+.trace li.done { border-color: var(--accent); }
+.trace li.done .who { color: var(--accent); }
+.trace code { background: none; padding: 0; font-size: .8rem; }
+.trace .loop { border: 2px solid var(--accent); border-left: none; border-radius: 0 8px 8px 0; margin: 2.9rem 0 3.1rem; position: relative; }
+.trace .loop span { position: absolute; top: 50%; left: 100%; transform: translate(-50%, -50%) rotate(90deg); white-space: nowrap; font-size: .7rem; font-weight: 600; color: var(--accent); background: var(--bg); padding: 0 .3rem; letter-spacing: .04em; text-transform: uppercase; }
+
+.quiz { counter-reset: q; }
+.q { border-top: 1px solid var(--rule); padding: 1rem 0; }
+.q p { margin-bottom: .6rem; }
+.q p::before { counter-increment: q; content: counter(q) ". "; font-family: Inter, sans-serif; font-weight: 600; color: var(--accent); }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; }
+@media (max-width: 520px) { .opts { grid-template-columns: 1fr; } }
+.quiz button {
+  font-size: .85rem; font-weight: 500; text-align: left; padding: .55rem .75rem; border-radius: 6px;
+  border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer;
+}
+.quiz button:hover:not([disabled]) { border-color: var(--muted); }
+.quiz button.right { border-color: var(--ok); color: var(--ok); }
+.quiz button.wrong { border-color: var(--bad); color: var(--bad); text-decoration: line-through; }
+.quiz button[disabled] { cursor: default; }
+.why { font-size: .9rem; color: var(--muted); margin-top: .6rem; display: none; }
+.why.show { display: block; }
+
+footer { margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: .85rem; color: var(--muted); }
+.theme-toggle {
+  position: fixed; top: 12px; right: 12px; background: var(--surface); border: 1px solid var(--rule);
+  color: var(--muted); border-radius: 99px; padding: .3rem .7rem; font: 500 .75rem Inter, sans-serif; cursor: pointer;
+}
+@media print {
+  .theme-toggle, .run, .btn { display: none; }
+  body { font-size: 12pt; background: #fff; }
+  h2 { break-after: avoid; } figure, pre, .step { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" type="button" aria-label="Toggle dark mode">Theme</button>
+<main>
+
+<header>
+  <h1>Getting started with <span class="adk">ADK</span>, <span class="mcp">MCP</span> and <span class="a2a">A2A</span></h1>
+  <p class="lede">Building tool-using AI agents with Google's Agent Development Kit, connecting them to external tools through the Model Context Protocol, and to other agents through the Agent2Agent protocol.</p>
+  <p class="byline"><strong>Tahreem Rasul</strong> · Google Developer Expert</p>
+  <a class="btn" href="https://colab.research.google.com/github/tahreemrasul/adk-mcp-a2a-session/blob/main/notebook.ipynb" target="_blank" rel="noopener">▶ Open the notebook in Colab</a>
+</header>
+
+<nav class="contents" aria-labelledby="contents-title">
+  <h2 id="contents-title">Contents</h2>
+  <table>
+    <tr><th>#</th><th>Section</th><th>Covers</th><th>Notebook</th></tr>
+    <tr><td>1</td><td><a href="#overview">Overview</a></td><td>Scope of the guide and the system it builds</td><td class="nb">–</td></tr>
+    <tr><td>2</td><td><a href="#llm">The limits of a standalone LLM</a></td><td>Why a model on its own can only generate text</td><td class="nb">–</td></tr>
+    <tr><td>3</td><td><a href="#tools">Tools</a></td><td>How a function is described to a model</td><td class="nb">–</td></tr>
+    <tr><td>4</td><td><a href="#function-calling">Function calling</a></td><td>The request, execute, respond cycle</td><td class="nb">Part 1</td></tr>
+    <tr><td>5</td><td><a href="#agents">Agents: function calling in a loop</a></td><td>How a model chains tool calls to finish a task</td><td class="nb">–</td></tr>
+    <tr><td>6</td><td><a href="#adk">Agent Development Kit (ADK)</a></td><td>Agents, tools, multi-agent systems, sessions, callbacks</td><td class="nb">Part 2</td></tr>
+    <tr><td>7</td><td><a href="#mcp">Model Context Protocol (MCP)</a></td><td>A standard connection between AI applications and tools</td><td class="nb">Part 3</td></tr>
+    <tr><td>8</td><td><a href="#a2a">Agent2Agent protocol (A2A)</a></td><td>A standard connection between agents</td><td class="nb">Part 4</td></tr>
+    <tr><td>9</td><td><a href="#summary">Summary: choosing an approach</a></td><td>When to use each, with a short self-check</td><td class="nb">–</td></tr>
+  </table>
+</nav>
+
+<!-- 1 -->
+<section id="overview">
+  <h2><span class="num">1</span> Overview</h2>
+  <p>This guide introduces the components needed to build AI agents that act on external systems. It begins with the limitations of a language model used on its own, introduces tools and function calling as the mechanism that addresses them, and defines an agent as a model that chains tool calls to complete a task. It then covers three technologies: <span class="adk">ADK</span>, a framework for building agents; <span class="mcp">MCP</span>, an open protocol for connecting AI applications to tools; and <span class="a2a">A2A</span>, an open protocol for communication between agents.</p>
+  <p>All sections use one example: a currency-conversion capability. It is introduced as a Python function, used through function calling, given to an ADK agent, moved behind an MCP server, and finally offered to a second agent over A2A. The figure below shows the complete system.</p>
+
+  <figure>
+    <div class="scroll"><svg viewBox="0 0 720 210" role="img" aria-labelledby="f0t">
+      <title id="f0t">The complete system: a trip planner agent delegates to a currency agent over A2A, and the currency agent uses a currency tool over MCP.</title>
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>
+      </defs>
+      <text x="40" y="104" text-anchor="middle" font-size="13" font-weight="600">User</text>
+      <line class="line" x1="62" y1="100" x2="108" y2="100" marker-end="url(#ah)"/>
+      <rect class="box" x="112" y="58" width="170" height="84" rx="8" style="stroke:var(--adk)"/>
+      <text x="197" y="90" text-anchor="middle" font-size="14" font-weight="600">trip_planner</text>
+      <text x="197" y="110" text-anchor="middle" font-size="11" class="muted">agent built with ADK</text>
+      <text x="197" y="127" text-anchor="middle" font-size="11" class="muted">tool: get_hotel_price</text>
+      <line class="line" x1="284" y1="100" x2="378" y2="100" marker-end="url(#ah)" style="stroke:var(--a2a);stroke-width:2"/>
+      <text x="331" y="90" text-anchor="middle" font-size="12" font-weight="600" style="fill:var(--a2a)">A2A</text>
+      <text x="331" y="120" text-anchor="middle" font-size="10" class="muted">over HTTP</text>
+      <rect class="box" x="382" y="58" width="170" height="84" rx="8" style="stroke:var(--adk)"/>
+      <text x="467" y="90" text-anchor="middle" font-size="14" font-weight="600">currency_agent</text>
+      <text x="467" y="110" text-anchor="middle" font-size="11" class="muted">agent built with ADK</text>
+      <text x="467" y="127" text-anchor="middle" font-size="11" class="muted">separate server</text>
+      <line class="line" x1="554" y1="100" x2="598" y2="100" marker-end="url(#ah)" style="stroke:var(--mcp);stroke-width:2"/>
+      <text x="576" y="90" text-anchor="middle" font-size="12" font-weight="600" style="fill:var(--mcp)">MCP</text>
+      <rect class="box" x="602" y="66" width="110" height="68" rx="8" style="stroke:var(--mcp)"/>
+      <text x="657" y="96" text-anchor="middle" font-size="13" font-weight="600">currency</text>
+      <text x="657" y="114" text-anchor="middle" font-size="11" class="muted">MCP server</text>
+      <text x="360" y="186" text-anchor="middle" font-size="12" class="muted">ADK builds each agent · MCP connects an agent to tools · A2A connects agents to each other</text>
+    </svg></div>
+    <figcaption>Figure 1. The system built in the accompanying notebook.</figcaption>
+  </figure>
+
+  <p>The <a href="https://colab.research.google.com/github/tahreemrasul/adk-mcp-a2a-session/blob/main/notebook.ipynb">Colab notebook</a> contains runnable code for each stage. Sections that have code point to the matching notebook part. Running it requires a free Gemini API key from <a href="https://aistudio.google.com/apikey">Google AI Studio</a>.</p>
+</section>
+
+<!-- 2 -->
+<section id="llm">
+  <h2><span class="num">2</span> The limits of a standalone LLM</h2>
+  <p>A large language model takes text in and generates text out. Its knowledge comes from training data with a fixed cutoff date, and it has no connection to anything outside the conversation. On its own it cannot look up a current exchange rate, query a company database or send an email.</p>
+
+  <figure>
+    <div class="scroll"><svg viewBox="0 0 720 230" role="img" aria-labelledby="f1t">
+      <title id="f1t">A user sends a question to an LLM and receives generated text. The LLM has no connection to live data, databases or APIs.</title>
+      <rect class="box" x="20" y="40" width="190" height="64" rx="10"/>
+      <text x="115" y="64" text-anchor="middle" font-size="11" class="muted">USER</text>
+      <text x="115" y="84" text-anchor="middle" font-size="11">"How many yen is 50 euros now?"</text>
+      <line class="line" x1="212" y1="72" x2="276" y2="72" marker-end="url(#ah)"/>
+      <rect class="box" x="280" y="30" width="160" height="84" rx="12" style="stroke:var(--adk);stroke-width:2"/>
+      <text x="360" y="64" text-anchor="middle" font-size="15" font-weight="600">LLM</text>
+      <text x="360" y="84" text-anchor="middle" font-size="11" class="muted">text in → text out</text>
+      <text x="360" y="100" text-anchor="middle" font-size="11" class="muted">knowledge fixed at training</text>
+      <line class="line" x1="442" y1="72" x2="506" y2="72" marker-end="url(#ah)"/>
+      <rect class="box" x="510" y="40" width="190" height="64" rx="10"/>
+      <text x="605" y="64" text-anchor="middle" font-size="11" class="muted">GENERATED TEXT</text>
+      <text x="605" y="84" text-anchor="middle" font-size="12.5">"About 8,000 yen."</text>
+      <line x1="360" y1="116" x2="360" y2="150" class="line" stroke-dasharray="4 4"/>
+      <g font-size="12">
+        <rect x="200" y="152" width="100" height="40" rx="6" fill="none" style="stroke:var(--rule)" stroke-dasharray="4 4"/><text x="250" y="177" text-anchor="middle" class="muted">live data</text>
+        <rect x="310" y="152" width="100" height="40" rx="6" fill="none" style="stroke:var(--rule)" stroke-dasharray="4 4"/><text x="360" y="177" text-anchor="middle" class="muted">databases</text>
+        <rect x="420" y="152" width="100" height="40" rx="6" fill="none" style="stroke:var(--rule)" stroke-dasharray="4 4"/><text x="470" y="177" text-anchor="middle" class="muted">APIs</text>
+      </g>
+      <path class="x" d="M352,126 L368,142 M368,126 L352,142"/>
+      <text x="360" y="216" text-anchor="middle" font-size="11.5" class="muted">no connection: the answer is a recalled rate, presented with confidence</text>
+    </svg></div>
+    <figcaption>Figure 2. A model on its own can only generate text from what it learned in training.</figcaption>
+  </figure>
+
+  <p>The answer in Figure 2 may be close, but the model cannot know today's rate. To answer correctly, it needs a way to reach live data and other systems.</p>
+</section>
+
+<!-- 3 -->
+<section id="tools">
+  <h2><span class="num">3</span> Tools</h2>
+  <p>A <strong>tool</strong> is a function that an application makes available to a model, such as an API call, a database query or a calculation. The model never sees the tool's code. It receives a description with the tool's name, its purpose and the parameters it accepts:</p>
+<pre><span class="k">def</span> get_exchange_rate(base: str, target: str) -> float:
+    <span class="c">"""Return how many units of `target` currency one unit of `base` buys."""</span>
+    ...
+
+<span class="c"># What the model receives</span>
+{
+  "name": "get_exchange_rate",
+  "description": "Return how many units of `target` currency one unit of `base` buys.",
+  "parameters": {
+    "type": "object",
+    "properties": { "base": {"type": "string"}, "target": {"type": "string"} },
+    "required": ["base", "target"]
+  }
+}</pre>
+  <p>Most model APIs, including Gemini, OpenAI and Anthropic, accept tool descriptions in this JSON Schema format. Libraries generate it from the function's name, type hints and docstring: the <a href="https://googleapis.github.io/python-genai/">Google Gen AI SDK</a> (<code>google-genai</code>) and <a href="#adk">ADK</a> do this for any Python function, and the <a href="https://github.com/modelcontextprotocol/python-sdk">MCP Python SDK</a> does the same through its <code>@mcp.tool()</code> decorator. A clear docstring therefore directly affects how well the model uses the tool.</p>
+
+  <figure>
+    <div class="scroll"><svg viewBox="0 0 720 220" role="img" aria-labelledby="f2t">
+      <title id="f2t">The application sends the user's question together with tool descriptions to the model. The tool itself stays in the application and connects to exchange-rate data.</title>
+      <rect x="150" y="14" width="420" height="196" rx="12" fill="none" style="stroke:var(--rule)"/>
+      <text x="164" y="34" font-size="11" font-weight="600" class="muted">APPLICATION</text>
+      <rect class="box" x="20" y="88" width="100" height="48" rx="8"/>
+      <text x="70" y="117" text-anchor="middle" font-size="13" font-weight="600">User</text>
+      <line class="line" x1="122" y1="112" x2="186" y2="112" marker-end="url(#ah)"/>
+      <rect class="box" x="190" y="72" width="150" height="80" rx="12" style="stroke:var(--adk);stroke-width:2"/>
+      <text x="265" y="106" text-anchor="middle" font-size="15" font-weight="600">LLM</text>
+      <text x="265" y="126" text-anchor="middle" font-size="10.5" class="muted">question + tool list</text>
+      <line class="line" x1="342" y1="112" x2="396" y2="112" stroke-dasharray="4 3"/>
+      <text x="369" y="102" text-anchor="middle" font-size="10" class="muted">knows</text>
+      <rect class="box" x="400" y="72" width="155" height="80" rx="8" style="stroke:var(--mcp);stroke-width:2"/>
+      <text x="477" y="98" text-anchor="middle" font-size="10.5" class="muted">TOOL</text>
+      <text x="477" y="118" text-anchor="middle" font-size="12" font-weight="600">get_exchange_rate</text>
+      <text x="477" y="136" text-anchor="middle" font-size="11" class="muted">(base, target)</text>
+      <line class="line" x1="557" y1="112" x2="606" y2="112" marker-end="url(#ah)" style="stroke:var(--mcp)"/>
+      <rect x="610" y="84" width="100" height="56" rx="8" fill="none" style="stroke:var(--mcp)"/>
+      <text x="660" y="108" text-anchor="middle" font-size="11.5">exchange-</text>
+      <text x="660" y="124" text-anchor="middle" font-size="11.5">rate data</text>
+      <text x="360" y="190" text-anchor="middle" font-size="11.5" class="muted">the model knows the tool exists; the application holds and runs it</text>
+    </svg></div>
+    <figcaption>Figure 3. Tool descriptions are sent to the model with the question. The next section shows how a tool is actually called.</figcaption>
+  </figure>
+</section>
+
+<!-- 4 -->
+<section id="function-calling">
+  <h2><span class="num">4</span> Function calling</h2>
+  <p>Function calling (also called tool calling) is the mechanism a model uses to request a tool. The model never executes anything itself. It responds with a structured request naming the function and its arguments, and the application carries it out. <a href="https://ai.google.dev/gemini-api/docs/function-calling">Gemini's documentation</a> describes the cycle in four steps:</p>
+
+  <figure>
+    <div class="steps">
+      <div class="step">
+        <div class="step-head"><span class="n">1</span><span class="pill app">Application</span>→<span class="pill model">Model</span></div>
+        <p>Send the question with the tool descriptions.</p>
+<pre>"How many yen is 50 euros?"
+tools: [get_exchange_rate]</pre>
+      </div>
+      <div class="step">
+        <div class="step-head"><span class="n">2</span><span class="pill model">Model</span>→<span class="pill app">Application</span></div>
+        <p>The model returns a function call instead of an answer.</p>
+<pre>function_call:
+  name: get_exchange_rate
+  args: {base: "EUR", target: "JPY"}</pre>
+      </div>
+      <div class="step">
+        <div class="step-head"><span class="n">3</span><span class="pill app">Application</span>→<span class="pill fn">Function</span></div>
+        <p>The application runs the function with those arguments.</p>
+<pre>get_exchange_rate("EUR", "JPY")
+→ 162.0</pre>
+      </div>
+      <div class="step">
+        <div class="step-head"><span class="n">4</span><span class="pill app">Application</span>→<span class="pill model">Model</span></div>
+        <p>Send the result back. The model writes the final answer.</p>
+<pre>function_response: 162.0
+→ "50 euros is 8,100 yen."</pre>
+      </div>
+    </div>
+    <figcaption>Figure 4. The model decides which function to call and with which arguments. The application decides whether to run it, and runs it.</figcaption>
+  </figure>
+
+  <p>This division also matters for safety: the model can only request actions, and the application controls which ones are executed.</p>
+
+  <div class="run"><span class="label"><a href="https://colab.research.google.com/github/tahreemrasul/adk-mcp-a2a-session/blob/main/notebook.ipynb">Notebook · Part 1</a></span><p>Function calling by hand. Automatic function calling is disabled, so the output shows the raw function call from step 2. The notebook then runs the function and sends the result back.</p></div>
+</section>
+
+<!-- 5 -->
+<section id="agents">
+  <h2><span class="num">5</span> Agents: function calling in a loop</h2>
+  <p>The cycle in <a href="#function-calling">section 4</a> performs one function call. Consider the request <em>"Convert 200 USD to GBP and to JPY"</em>. It needs two exchange rates, so one round trip is not enough. The application has to keep returning results to the model and asking again, until the model replies with text instead of another function call:</p>
+
+  <figure>
+    <div class="trace">
+      <ol>
+        <li><span class="who">User</span><span>"Convert 200 USD to GBP and to JPY"</span></li>
+        <li class="m"><span class="who">Model</span><span>calls <code>get_exchange_rate("USD", "GBP")</code></span></li>
+        <li class="t"><span class="who">Tool</span><span>returns <code>0.787</code></span></li>
+        <li class="m"><span class="who">Model</span><span>calls <code>get_exchange_rate("USD", "JPY")</code></span></li>
+        <li class="t"><span class="who">Tool</span><span>returns <code>150.0</code></span></li>
+        <li class="done"><span class="who">Model</span><span>"200 USD is 157.40 GBP and 30,000 JPY." <em>No further calls, so the loop ends.</em></span></li>
+      </ol>
+      <div class="loop" aria-hidden="true"><span>loop</span></div>
+    </div>
+    <figcaption>Figure 5. The model, not the application, decides how many calls to make, in what order, and when to stop.</figcaption>
+  </figure>
+
+  <p>A system in which the model directs this loop is usually called an <strong>agent</strong>. Anthropic's <a href="https://www.anthropic.com/engineering/building-effective-agents">Building effective agents</a> draws the distinction this way:</p>
+  <blockquote>Workflows are systems where LLMs and tools are orchestrated through predefined code paths. Agents, on the other hand, are systems where LLMs dynamically direct their own processes and tool usage.<cite>Anthropic, Building effective agents</cite></blockquote>
+  <p>In a workflow, the developer defines the steps. In an agent, the model chooses them.</p>
+</section>
+
+<!-- 6 -->
+<section id="adk">
+  <h2><span class="num">6</span> <span><span class="adk">Agent Development Kit</span> (ADK)</span></h2>
+  <p>The loop in <a href="#agents">section 5</a> can be written by hand in about thirty lines. A production agent needs more than the loop:</p>
+  <ul class="tight">
+    <li>conversation history and state that persist across turns</li>
+    <li>several agents that delegate work to each other</li>
+    <li>hooks for logging, guardrails and error handling</li>
+    <li>tools to test, evaluate and deploy</li>
+  </ul>
+  <p>Agent frameworks provide these parts. The <a href="https://adk.dev/">Agent Development Kit (ADK)</a> is Google's open-source framework, available for Python, TypeScript, Go, Java and Kotlin. Other frameworks include LangGraph, the OpenAI Agents SDK, CrewAI and the Claude Agent SDK. ADK is optimised for Gemini, but it also <a href="https://adk.dev/agents/models/">supports other models</a> through connectors such as LiteLLM.</p>
+
+  <h3>Agents</h3>
+  <p>Every agent derives from <code>BaseAgent</code>. ADK provides three kinds:</p>
+  <ul class="tight">
+    <li><strong><code>LlmAgent</code></strong> (also available as <code>Agent</code>) uses a model to reason, decide and call tools. This is the agent type from <a href="#agents">section 5</a>.</li>
+    <li><strong>Workflow agents</strong> run sub-agents in a fixed order without using a model for control flow: <code>SequentialAgent</code> (one after another), <code>ParallelAgent</code> (concurrently) and <code>LoopAgent</code> (repeatedly, until a condition or iteration limit).</li>
+    <li><strong>Custom agents</strong> subclass <code>BaseAgent</code> for logic that does not fit either pattern.</li>
+  </ul>
+  <p>An <code>LlmAgent</code> is configured with five main parameters:</p>
+  <table>
+    <tr><th>Parameter</th><th>Purpose</th></tr>
+    <tr><td><code>name</code></td><td>Unique identifier</td></tr>
+    <tr><td><code>model</code></td><td>The model, such as <code>"gemini-flash-latest"</code> or a <code>LiteLlm</code> object for other providers</td></tr>
+    <tr><td><code>description</code></td><td>What the agent does. Other agents read it to decide whether to delegate to this one.</td></tr>
+    <tr><td><code>instruction</code></td><td>The prompt that guides its behaviour and tool use</td></tr>
+    <tr><td><code>tools</code></td><td>The tools it can call</td></tr>
+  </table>
+  <p>The currency function from <a href="#tools">section 3</a> becomes an agent like this:</p>
+<pre><span class="k">from</span> google.adk.agents <span class="k">import</span> Agent
+
+currency_agent = Agent(
+    name="currency_agent",
+    model="gemini-flash-latest",
+    description="Converts amounts between currencies.",
+    instruction=(
+        "You convert amounts between currencies. "
+        "Always use get_exchange_rate; never guess a rate."
+    ),
+    tools=[get_exchange_rate],   <span class="c"># the same plain function</span>
+)</pre>
+
+  <h3>Tools</h3>
+  <ul class="tight">
+    <li><strong>Function tools:</strong> any Python function, wrapped automatically or explicitly with <code>FunctionTool</code>.</li>
+    <li><strong>Built-in tools:</strong> such as <code>google_search</code> for grounding in web results, and code execution through <code>BuiltInCodeExecutor</code>.</li>
+    <li><strong>MCP tools:</strong> every tool on an MCP server, through <code>McpToolset</code> (see <a href="#mcp">section 7</a>).</li>
+    <li><strong>Agents as tools:</strong> <code>AgentTool</code> wraps another agent so it can be called like a function.</li>
+  </ul>
+
+  <h3>Multi-agent systems</h3>
+  <p>Agents can be composed in two ways:</p>
+  <ul class="tight">
+    <li><strong><code>sub_agents</code> (delegation):</strong> the parent's model reads each sub-agent's <code>description</code> and transfers the conversation to the best fit. Control passes to the sub-agent. <a href="#a2a">Section 8</a> uses this with a remote agent.</li>
+    <li><strong><code>AgentTool</code> (invocation):</strong> the parent calls the other agent as a tool, receives its final answer as the tool result, and decides the next step itself.</li>
+  </ul>
+
+  <h3>Sessions, state and events</h3>
+  <ul class="tight">
+    <li>A <strong>session</strong> is one conversation. It stores the history and a <code>state</code> dictionary that tools and agents can read and write. Key prefixes set the scope: <code>user:</code>, <code>app:</code> and <code>temp:</code>.</li>
+    <li>Every step (a user message, model reply, tool call or tool result) is recorded as an <strong>event</strong>. The sequence of events forms the conversation history.</li>
+    <li>A <strong>session service</strong> stores sessions in memory, in a database or on Vertex AI.</li>
+  </ul>
+
+  <h3>Callbacks</h3>
+  <p>Callbacks are functions that run before and after the agent, the model call, and each tool call (<code>before_model_callback</code>, <code>after_tool_callback</code> and so on). They are used for logging, guardrails, caching and modifying requests or responses. For example, a <code>before_model_callback</code> can block a request before it reaches the model.</p>
+
+  <h3>Development tools</h3>
+  <p>The <code>adk</code> command-line tool runs agents locally. <code>adk web</code> opens a browser UI for chatting with agents and inspecting their events, state and traces. <code>adk eval</code> runs evaluation sets, and <code>adk deploy</code> deploys agents to Google Cloud.</p>
+
+  <div class="run"><span class="label"><a href="https://colab.research.google.com/github/tahreemrasul/adk-mcp-a2a-session/blob/main/notebook.ipynb">Notebook · Part 2</a></span><p>An ADK agent with the currency function. The question needs two conversions, and the output lists both tool calls as the agent makes them. A follow-up question then relies on the session history.</p></div>
+</section>
+
+<!-- 7 -->
+<section id="mcp">
+  <h2><span class="num">7</span> <span><span class="mcp">Model Context Protocol</span> (MCP)</span></h2>
+  <p>So far, <code>get_exchange_rate</code> exists only inside one Python program. Other AI applications, such as a chat client, a code editor or another team's agent, would each need their own integration for it. With many applications and many tools, every pair needs a separate integration.</p>
+  <p>The <a href="https://modelcontextprotocol.io/docs/getting-started/intro">Model Context Protocol (MCP)</a> is an open standard for this connection, <a href="https://www.anthropic.com/news/model-context-protocol">open-sourced by Anthropic</a> in November 2024. Its documentation compares it to a USB-C port for AI applications: a tool written once as an <strong>MCP server</strong> can be used by any application that supports MCP.</p>
+
+  <figure>
+    <div class="scroll"><svg viewBox="0 0 720 220" role="img" aria-labelledby="f6t">
+      <title id="f6t">MCP hosts on the left each run MCP clients that connect to MCP servers on the right.</title>
+      <text x="110" y="22" text-anchor="middle" font-size="12" font-weight="600" class="muted">HOSTS (with MCP clients)</text>
+      <text x="610" y="22" text-anchor="middle" font-size="12" font-weight="600" class="muted">MCP SERVERS</text>
+      <rect class="box" x="30" y="40" width="160" height="42" rx="6"/><text x="110" y="66" text-anchor="middle" font-size="12.5">ADK agent</text>
+      <rect class="box" x="30" y="94" width="160" height="42" rx="6"/><text x="110" y="120" text-anchor="middle" font-size="12.5">Claude Desktop</text>
+      <rect class="box" x="30" y="148" width="160" height="42" rx="6"/><text x="110" y="174" text-anchor="middle" font-size="12.5">VS Code / Cursor</text>
+      <rect x="310" y="40" width="100" height="150" rx="8" fill="none" style="stroke:var(--mcp);stroke-width:2"/>
+      <text x="360" y="120" text-anchor="middle" font-size="15" font-weight="600" style="fill:var(--mcp)">MCP</text>
+      <g class="line"><line x1="190" y1="61" x2="310" y2="115"/><line x1="190" y1="115" x2="310" y2="115"/><line x1="190" y1="169" x2="310" y2="115"/>
+      <line x1="410" y1="115" x2="530" y2="61"/><line x1="410" y1="115" x2="530" y2="115"/><line x1="410" y1="115" x2="530" y2="169"/></g>
+      <rect class="box" x="530" y="40" width="160" height="42" rx="6" style="stroke:var(--mcp)"/><text x="610" y="66" text-anchor="middle" font-size="12.5">currency (ours)</text>
+      <rect class="box" x="530" y="94" width="160" height="42" rx="6"/><text x="610" y="120" text-anchor="middle" font-size="12.5">GitHub</text>
+      <rect class="box" x="530" y="148" width="160" height="42" rx="6"/><text x="610" y="174" text-anchor="middle" font-size="12.5">filesystem</text>
+      <text x="360" y="212" text-anchor="middle" font-size="11" class="muted">any host can use any server</text>
+    </svg></div>
+    <figcaption>Figure 6. Each server is written once and works with every MCP host.</figcaption>
+  </figure>
+
+  <h3>Core concepts</h3>
+  <p>From the <a href="https://modelcontextprotocol.io/docs/learn/architecture">MCP architecture documentation</a>:</p>
+  <ul class="tight">
+    <li><strong>Host:</strong> the AI application the user works in, such as an ADK agent, Claude Desktop or VS Code.</li>
+    <li><strong>Client:</strong> a component inside the host that maintains the connection to one server. A host creates one client per server.</li>
+    <li><strong>Server:</strong> a program that exposes capabilities to clients. It can offer three kinds:
+      <ul class="tight">
+        <li><strong>Tools:</strong> functions the model can call (used in this guide)</li>
+        <li><strong>Resources:</strong> data that provides context, such as files or database records</li>
+        <li><strong>Prompts:</strong> reusable prompt templates</li>
+      </ul>
+    </li>
+    <li><strong>Transports:</strong> <em>stdio</em> for a local server that the host starts as a subprocess, and <em>Streamable HTTP</em> for a remote server.</li>
+    <li><strong>Messages:</strong> clients and servers exchange JSON-RPC 2.0 messages, for example to list a server's tools or call one.</li>
+  </ul>
+
+  <h3>The currency tool as an MCP server</h3>
+<pre><span class="k">from</span> mcp.server.mcpserver <span class="k">import</span> MCPServer   <span class="c"># mcp 2.x; older tutorials use FastMCP</span>
+
+mcp = MCPServer("currency")
+
+@mcp.tool()
+<span class="k">def</span> get_exchange_rate(base: str, target: str) -> float:
+    <span class="c">"""Return how many units of `target` currency one unit of `base` buys."""</span>
+    ...
+
+mcp.run()</pre>
+  <p>On the ADK side, the only change from <a href="#adk">section 6</a> is the tools list: <code>tools=[McpToolset(...)]</code> replaces the Python function. ADK starts the server, requests its list of tools and passes their descriptions to the model.</p>
+
+  <div class="run"><span class="label"><a href="https://colab.research.google.com/github/tahreemrasul/adk-mcp-a2a-session/blob/main/notebook.ipynb">Notebook · Part 3</a></span><p>The notebook writes the server to a file, lists its tools from ADK, and asks the agent the same question as in Part 2.</p></div>
+  <div class="callout"><span class="label">Before running Part 3</span>The function now runs in a separate process, behind a protocol. Will the agent's answer differ from Part 2?</div>
+</section>
+
+<!-- 8 -->
+<section id="a2a">
+  <h2><span class="num">8</span> <span><span class="a2a">Agent2Agent protocol</span> (A2A)</span></h2>
+  <p>MCP gives an agent access to tools. Some tasks are better handed to another <em>agent</em>: one with its own instructions, model and tools, often maintained by a different team or built with a different framework. In the running example, a trip-planning agent needs currency conversion and delegates it to the currency agent.</p>
+  <p>The <a href="https://a2a-protocol.org/latest/">Agent2Agent protocol (A2A)</a> is an open standard for this. It lets agents discover each other and exchange tasks over HTTP without knowing how the other is implemented. Google <a href="https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/">announced it</a> in April 2025, and it is now governed by the Linux Foundation. The A2A documentation <a href="https://a2a-protocol.org/latest/topics/a2a-and-mcp/">describes its relationship to MCP</a> this way:</p>
+  <blockquote>MCP is vertical. It deepens a single agent. A2A is horizontal. It connects agents across that boundary.<cite>A2A documentation, A2A and MCP</cite></blockquote>
+
+  <figure>
+    <div class="scroll"><svg viewBox="0 0 720 200" role="img" aria-labelledby="f7t">
+      <title id="f7t">A client agent reads the remote agent's card, sends it a task, and receives the result.</title>
+      <rect class="box" x="30" y="60" width="180" height="80" rx="8" style="stroke:var(--a2a)"/>
+      <text x="120" y="94" text-anchor="middle" font-size="14" font-weight="600">trip_planner</text>
+      <text x="120" y="114" text-anchor="middle" font-size="11" class="muted">client agent</text>
+      <rect class="box" x="510" y="60" width="180" height="80" rx="8" style="stroke:var(--a2a)"/>
+      <text x="600" y="94" text-anchor="middle" font-size="14" font-weight="600">currency_agent</text>
+      <text x="600" y="114" text-anchor="middle" font-size="11" class="muted">remote agent</text>
+      <line class="line" x1="212" y1="74" x2="506" y2="74" marker-end="url(#ah)"/>
+      <text x="360" y="66" text-anchor="middle" font-size="12">① GET /.well-known/agent-card.json</text>
+      <line class="line" x1="212" y1="104" x2="506" y2="104" marker-end="url(#ah)"/>
+      <text x="360" y="97" text-anchor="middle" font-size="12">② message: "convert 54,000 JPY to EUR"</text>
+      <line class="line" x1="508" y1="132" x2="214" y2="132" marker-end="url(#ah)" style="stroke:var(--accent)"/>
+      <text x="360" y="150" text-anchor="middle" font-size="12" style="fill:var(--accent)">③ task completed, result returned</text>
+      <text x="360" y="188" text-anchor="middle" font-size="11" class="muted">neither side needs to know how the other is built</text>
+    </svg></div>
+    <figcaption>Figure 7. The client agent learns what the remote agent can do from its agent card, then sends it a task.</figcaption>
+  </figure>
+
+  <h3>Core concepts</h3>
+  <p>From the <a href="https://a2a-protocol.org/latest/topics/key-concepts/">A2A key concepts</a>:</p>
+  <ul class="tight">
+    <li><strong>Client agent and remote agent:</strong> the client acts on behalf of the user and sends work. The remote agent exposes an HTTP endpoint that implements A2A.</li>
+    <li><strong>Agent card:</strong> a JSON document describing the remote agent's name, skills, endpoint and authentication requirements, served at <code>/.well-known/agent-card.json</code>.</li>
+    <li><strong>Task:</strong> a unit of work with an ID and a lifecycle. It can complete, fail, or pause for more input.</li>
+    <li><strong>Message:</strong> one turn of communication, made of <strong>parts</strong> (text, files or structured data).</li>
+    <li><strong>Artifact:</strong> an output the remote agent produces, such as a document or structured data.</li>
+  </ul>
+
+  <h3>A2A in ADK</h3>
+  <p>Each side takes one line. <code>to_a2a()</code> turns an agent into a web app that serves its agent card, and <code>RemoteA2aAgent</code> lets another agent use it as a sub-agent (see <a href="#adk">section 6</a>):</p>
+<pre><span class="c"># the team that owns the currency agent</span>
+a2a_app = to_a2a(currency_agent, port=8001)
+
+<span class="c"># the team building the trip planner</span>
+remote_currency = RemoteA2aAgent(
+    name="currency_agent",
+    description="Converts amounts between currencies.",
+    agent_card="http://localhost:8001/.well-known/agent-card.json",
+)
+trip_agent = Agent(..., tools=[get_hotel_price], sub_agents=[remote_currency])</pre>
+  <p><a href="https://adk.dev/a2a/intro/">ADK's guidance</a> is to use A2A when the other agent is a separate service, owned by another team, or built in another language or framework. Agents that only organise code within one application should be local sub-agents, which share memory and avoid network calls.</p>
+
+  <div class="run"><span class="label"><a href="https://colab.research.google.com/github/tahreemrasul/adk-mcp-a2a-session/blob/main/notebook.ipynb">Notebook · Part 4</a></span><p>The notebook serves the currency agent, prints its agent card, and asks the trip planner for the euro cost of three nights in Tokyo. The trip planner uses its own hotel tool, then hands off to the remote agent, which gets the rate from the MCP server.</p></div>
+</section>
+
+<!-- 9 -->
+<section id="summary">
+  <h2><span class="num">9</span> Summary: choosing an approach</h2>
+  <table>
+    <tr><th>Requirement</th><th>Approach</th></tr>
+    <tr><td>The model needs live data or must take an action</td><td>A tool, through <a href="#function-calling">function calling</a></td></tr>
+    <tr><td>The model should choose the steps itself</td><td>An <a href="#agents">agent</a>: function calling in a loop</td></tr>
+    <tr><td>Sessions, multi-agent delegation, evaluation and deployment</td><td>An agent framework such as <a href="#adk">ADK</a></td></tr>
+    <tr><td>One tool, shared by many AI applications</td><td>An <a href="#mcp">MCP</a> server</td></tr>
+    <tr><td>Delegate a task to an agent run by someone else</td><td><a href="#a2a">A2A</a></td></tr>
+  </table>
+
+  <h3>Self-check</h3>
+  <div class="quiz" id="quiz"></div>
+</section>
+
+<section id="further">
+  <h2>Further reading</h2>
+  <ul class="tight">
+    <li><a href="https://adk.dev/get-started/">ADK quickstart</a>: build an agent locally and explore it in <code>adk web</code></li>
+    <li><a href="https://adk.dev/tools-custom/mcp-tools/">MCP tools in ADK</a> and the <a href="https://modelcontextprotocol.io/docs/learn/architecture">MCP architecture overview</a></li>
+    <li><a href="https://adk.dev/a2a/quickstart-exposing/">Exposing</a> and <a href="https://adk.dev/a2a/quickstart-consuming/">consuming</a> agents over A2A, and the <a href="https://a2a-protocol.org/latest/topics/a2a-and-mcp/">A2A and MCP</a> comparison</li>
+    <li><a href="https://www.anthropic.com/engineering/building-effective-agents">Building effective agents</a>, on when an agent is the right choice</li>
+  </ul>
+</section>
+
+<footer>Tested with google-adk 2.15, mcp 2.3 and a2a-sdk 1.3 (November 2026). These libraries change quickly; if an import fails, check the linked documentation first.</footer>
+</main>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  try { var saved = localStorage.getItem("theme"); if (saved) root.dataset.theme = saved; } catch (e) {}
+  document.querySelector(".theme-toggle").addEventListener("click", function () {
+    var dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+  });
+
+  var OPTS = ["Plain function tool", "Shared MCP server", "Remote A2A agent", "Local ADK sub-agent"];
+  var QUESTIONS = [
+    { q: "A team's Slack bot, IDE assistant and support agent all need the same internal search API.",
+      order: [1, 0, 3, 2], answer: 1,
+      why: "One tool used by many AI applications is the case MCP addresses: write the server once and connect each host to it." },
+    { q: "A partner company runs a claims-processing agent built with LangGraph. An ADK agent must hand it cases.",
+      order: [0, 3, 2, 1], answer: 2,
+      why: "The other side is an agent, owned by another organisation and built with another framework. That is the case A2A addresses." },
+    { q: "An agent needs a small helper that formats dates. Nothing else will use it.",
+      order: [3, 1, 2, 0], answer: 0,
+      why: "A plain function is simplest. A server or a remote agent would add work without any benefit." },
+    { q: "In one codebase, a researcher agent should pass its findings to a writer agent.",
+      order: [2, 3, 0, 1], answer: 3,
+      why: "Both agents live in one application, so local sub-agents fit: shared memory and no network calls." }
+  ];
+
+  var quiz = document.getElementById("quiz");
+  QUESTIONS.forEach(function (item) {
+    var q = document.createElement("div"); q.className = "q";
+    var p = document.createElement("p"); p.textContent = item.q; q.appendChild(p);
+    var opts = document.createElement("div"); opts.className = "opts";
+    var why = document.createElement("div"); why.className = "why"; why.textContent = item.why;
+    item.order.forEach(function (i) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = OPTS[i];
+      b.addEventListener("click", function () {
+        if (i === item.answer) {
+          b.classList.add("right");
+          opts.querySelectorAll("button").forEach(function (x) { x.disabled = true; });
+          why.classList.add("show");
+        } else {
+          b.classList.add("wrong"); b.disabled = true;
+        }
+      });
+      opts.appendChild(b);
+    });
+    q.appendChild(opts); q.appendChild(why); quiz.appendChild(q);
+  });
+})();
+</script>
+</body>
+</html>
